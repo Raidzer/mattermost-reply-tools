@@ -4,7 +4,7 @@
     "description": "Adds a Reply button to messages and renders quoted replies with clickable references in Mattermost.",
     "homepage_url": "https://github.com/Raidzer/mattermost-reply-tools",
     "support_url": "https://github.com/Raidzer/mattermost-reply-tools/issues",
-    "version": "1.1.3",
+    "version": "1.2.0",
     "min_server_version": "9.0.0",
     "webapp": {
         "bundle_path": "webapp/dist/main.js"

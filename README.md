@@ -8,7 +8,7 @@
 
 ### Выбор сообщения
 
-Кнопка **Reply** появляется в панели действий сообщения и подготавливает основной редактор канала.
+Кнопка **Reply** появляется в панели действий сообщения и подготавливает основной редактор канала. Тот же ответ можно начать двойным кликом по телу сообщения — в ленте канала или в открытом треде.
 
 ![Кнопка Reply в панели сообщения](images/reply-button.png)
 
@@ -47,7 +47,7 @@
 ## Совместимость и ограничения
 
 - минимальная версия Mattermost Server, указанная в манифесте: **9.0.0**;
-- текущая версия плагина: **1.1.3**;
+- текущая версия плагина: **1.2.0**;
 - для предсказуемой работы тредов рекомендуется режим **Threaded discussions → Always On**;
 - удалённые и системные сообщения не предлагаются в качестве цели ответа;
 - длинный исходный текст сокращается в карточке и Markdown-представлении;
@@ -61,7 +61,7 @@
 Для установки нужен собранный архив:
 
 ```text
-dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
+dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
 ```
 
 ### Через System Console
@@ -75,7 +75,7 @@ dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
 ### Через mmctl
 
 ```bash
-mmctl plugin add dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
+mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
 mmctl plugin enable com.github.mattermost-channel-reply
 ```
 

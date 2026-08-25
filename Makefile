@@ -1,5 +1,5 @@
 PLUGIN_ID := com.github.mattermost-channel-reply
-PLUGIN_VERSION := 1.1.3
+PLUGIN_VERSION := 1.2.0
 BUNDLE_NAME := $(PLUGIN_ID)-$(PLUGIN_VERSION).tar.gz
 
 .PHONY: all webapp bundle dist clean
