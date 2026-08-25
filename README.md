@@ -109,6 +109,19 @@ npm run build
 
 Для локального отчёта о покрытии используйте `npm run test:coverage` в каталоге `webapp`.
 
+## Автоматические проверки
+
+GitHub Actions запускает тесты, проверку TypeScript и production-сборку после каждого push в любую ветку, а также для pull request в `develop` или `main`.
+
+Чтобы тесты запускались локально перед каждым коммитом, один раз включите хранимый в репозитории pre-commit hook:
+
+```bash
+cd webapp
+npm run hooks:install
+```
+
+В Linux, macOS, WSL или Git Bash вместо этого можно выполнить `make hooks`. Hook блокирует коммит при падении `npm test`. Как и любой стандартный Git hook, его можно однократно обойти с помощью `git commit --no-verify`.
+
 ## Устройство репозитория
 
 | Путь | Назначение |
