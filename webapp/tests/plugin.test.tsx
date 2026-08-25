@@ -4,6 +4,9 @@ import type {Store} from 'redux';
 import {describe, expect, it, vi} from 'vitest';
 
 import Plugin from '../src/index';
+import DoubleClickReplyHandler from '../src/components/DoubleClickReplyHandler';
+import ReplyComposerPreview from '../src/components/ReplyComposerPreview';
+import QuotedReplyStyles from '../src/components/QuotedReplyStyles';
 import {QUOTED_REPLY_BODY_PROP, QUOTED_REPLY_POST_TYPE, QUOTED_REPLY_PROP} from '../src/constants';
 import {CLEAR_PENDING_REPLY, PLUGIN_STATE_KEY, type PendingReply} from '../src/types/store';
 import {post, user} from './helpers';
@@ -94,7 +97,9 @@ describe('Plugin.initialize', () => {
 
         expect(testRegistry.value.registerReducer).toHaveBeenCalledTimes(1);
         expect(testRegistry.value.registerTranslations).toHaveBeenCalledTimes(1);
-        expect(testRegistry.value.registerRootComponent).toHaveBeenCalledTimes(2);
+        expect(testRegistry.value.registerRootComponent).toHaveBeenNthCalledWith(1, QuotedReplyStyles);
+        expect(testRegistry.value.registerRootComponent).toHaveBeenNthCalledWith(2, ReplyComposerPreview);
+        expect(testRegistry.value.registerRootComponent).toHaveBeenNthCalledWith(3, DoubleClickReplyHandler);
         expect(testRegistry.value.registerPostActionComponent).toHaveBeenCalledTimes(1);
         expect(testRegistry.value.registerPostTypeComponent).toHaveBeenCalledWith(
             QUOTED_REPLY_POST_TYPE,
