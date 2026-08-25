@@ -8,6 +8,7 @@ import manifest from './manifest';
 import reducer from './reducers';
 import ReplyButton from './components/ReplyButton';
 import ReplyComposerPreview from './components/ReplyComposerPreview';
+import DoubleClickReplyHandler from './components/DoubleClickReplyHandler';
 import QuotedReplyPost from './components/QuotedReplyPost';
 import QuotedReplyStyles from './components/QuotedReplyStyles';
 import {QUOTED_REPLY_POST_TYPE} from './constants';
@@ -38,6 +39,7 @@ export default class Plugin {
         registry.registerTranslations(getTranslationsForLocale);
         registry.registerRootComponent(QuotedReplyStyles);
         registry.registerRootComponent(ReplyComposerPreview);
+        registry.registerRootComponent(DoubleClickReplyHandler);
         registry.registerPostActionComponent(ReplyButton);
         registry.registerPostTypeComponent(QUOTED_REPLY_POST_TYPE, QuotedReplyPost);
 
