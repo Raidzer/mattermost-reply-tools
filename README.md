@@ -1,136 +1,160 @@
 # Mattermost Reply Tools
 
-**Channel Reply** добавляет в Mattermost два явных способа ответить на выбранное сообщение: продолжить разговор прямо в ленте канала с видимой цитатой или отправить обычный ответ внутрь треда.
+**Channel Reply** gives Mattermost users two explicit ways to reply to a selected message: continue the conversation directly in the channel with a visible quote, or send a regular reply inside a thread.
 
-Это небольшое community-расширение без серверного процесса и страницы настроек. Вся логика интерфейса выполняется в webapp-клиенте Mattermost.
+This is a small community plugin with no server process or settings page. All interface logic runs in the Mattermost webapp client.
 
-## Как это выглядит
+## What it looks like
 
-### Выбор сообщения
+### Selecting a message
 
-Кнопка **Reply** появляется в панели действий сообщения и подготавливает основной редактор канала. Тот же ответ можно начать двойным кликом по телу сообщения — в ленте канала или в открытом треде.
+The **Reply** button appears in the message action bar and prepares the appropriate editor for a quoted reply. The same action can be started by double-clicking a non-interactive area of the message body: in the channel timeline, the reply is posted to the main channel; in the right-hand thread panel, it is posted to the open thread.
 
-![Кнопка Reply в панели сообщения](images/reply-button.png)
+To distinguish a single click from a double click, the plugin delays single-click handling by 500 ms. If no second click arrives, the event is passed to Mattermost and the regular thread opens from the channel timeline. On a double click, the pending single click is canceled, so the right-hand panel does not open before **Reply** mode starts.
 
-### Отправленный ответ
+Double clicks are not intercepted on interactive elements such as links, buttons, input fields, code blocks, images, attachments, and embedded content. These elements continue to work without delay.
 
-Перед текстом ответа отображается компактная карточка исходного сообщения. Нажатие на неё открывает оригинал по постоянной ссылке.
+![Reply button in the message action bar](images/reply-button.png)
 
-![Ответ с интерактивной цитатой](images/quoted-reply-thread.png)
+### Posted reply
 
-## Два сценария ответа
+A compact card for the original message appears above the reply text. Clicking it opens the original message through its permanent link.
 
-| Откуда запускается действие | Куда попадёт ответ | Что увидят участники |
+![Reply with an interactive quote](images/quoted-reply-thread.png)
+
+## Reply and navigation flows
+
+| Action | Result | What participants see |
 | --- | --- | --- |
-| Лента канала → **Reply** | В основной канал, отдельным сообщением | Цитату выбранного сообщения и новый текст |
-| Правая панель треда → **Reply** | В текущий тред | Цитату и ответ внутри обсуждения |
-| Меню сообщения → **Thread** | В тред выбранного сообщения | Обычное продолжение обсуждения с цитатой |
+| Channel timeline → **Reply** or double-click the message body | A separate reply in the main channel | The selected message quote and the new text |
+| Right-hand thread panel → **Reply** or double-click the message body | A reply in the current thread | The quote and reply inside the discussion |
+| Channel timeline → single-click the message body | The thread opens in the right-hand panel after a 500 ms delay | Quoted reply mode is not activated |
+| Message menu → **Thread** | A reply in the selected message's thread | A regular thread reply with a quote |
 
-После выбора сообщения плагин переводит фокус в нужный редактор и показывает предварительный просмотр. Выбор можно отменить крестиком. При отправке плагин сохраняет:
+After a message is selected, the plugin focuses the appropriate editor and displays a preview. The selection can be cleared with the close button. When the reply is posted, the plugin stores:
 
-- идентификатор исходного сообщения в свойствах нового поста;
-- отдельное тело ответа для собственного web-интерфейса;
-- Markdown-цитату в поле сообщения как переносимый запасной формат.
+- the original message ID in the new post's properties;
+- a separate reply body for the plugin's web interface;
+- a Markdown quote in the message field as a portable fallback.
 
-Последний пункт позволяет прочитать результат даже в клиенте, который не умеет отображать компоненты этого плагина.
+The fallback keeps the reply readable in clients that cannot render this plugin's components.
 
-## Поддержка клиентов
+## Client support
 
-| Клиент | Создание ответа с цитатой | Отображение результата |
+| Client | Creating quoted replies | Displaying replies |
 | --- | --- | --- |
-| Mattermost Web | Полностью поддерживается | Интерактивная карточка цитаты |
-| Mattermost Desktop | Полностью поддерживается | Интерактивная карточка цитаты |
-| Нативные приложения Android и iOS | Не поддерживается | Обычная Markdown-цитата |
+| Mattermost Web | Fully supported | Interactive quote card |
+| Mattermost Desktop | Fully supported | Interactive quote card |
+| Native Android and iOS apps | Not supported | Plain Markdown quote |
 
-Нативное мобильное приложение не загружает webapp-плагины. Сообщения, созданные через браузер или desktop-клиент, на телефоне остаются читаемыми, но кнопка **Reply** и предварительный просмотр там не появятся.
+Native mobile apps do not load webapp plugins. Messages created in a browser or the desktop client remain readable on mobile, but the **Reply** button and editor preview are not available there.
 
-## Совместимость и ограничения
+## Compatibility and limitations
 
-- минимальная версия Mattermost Server, указанная в манифесте: **9.0.0**;
-- текущая версия плагина: **1.2.0**;
-- для предсказуемой работы тредов рекомендуется режим **Threaded discussions → Always On**;
-- удалённые и системные сообщения не предлагаются в качестве цели ответа;
-- длинный исходный текст сокращается в карточке и Markdown-представлении;
-- плагин не запускает собственный backend и не добавляет API-методы;
-- конфигурационных параметров у плагина нет.
+- the minimum Mattermost Server version declared in the manifest is **9.0.0**;
+- the current plugin version is **1.2.0**;
+- **Threaded discussions → Always On** is recommended for predictable thread behavior;
+- double-click reply is available only in Mattermost Web and Desktop;
+- single-clicking a message body is handled with a 500 ms delay to prevent the thread from opening before a double click;
+- links, buttons, code blocks, images, attachments, and other interactive elements are not double-click reply targets;
+- deleted and system messages cannot be selected as reply targets;
+- long source messages are shortened in the quote card and Markdown representation;
+- the plugin has no backend process and adds no API endpoints;
+- the plugin has no configuration options.
 
-Проект тестировался с Mattermost 10.5.x. Перед установкой в рабочую среду проверьте сборку на той версии сервера и клиента, которую использует ваша команда.
+The project was tested with Mattermost 11.6.2. Before deploying it to production, verify the build against the server and client versions used by your team.
 
-## Установка
+## Installation
 
-Для установки нужен собранный архив:
+Installation requires a built plugin archive:
 
 ```text
 dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
 ```
 
-### Через System Console
+### System Console
 
-1. Разрешите использование и загрузку пользовательских плагинов в конфигурации сервера.
-2. Откройте **System Console → Plugins → Plugin Management**.
-3. Загрузите архив из каталога `dist`.
-4. Включите **Channel Reply**.
-5. Перезагрузите вкладку Mattermost или desktop-клиент.
+1. Allow custom plugins and plugin uploads in the server configuration.
+2. Open **System Console → Plugins → Plugin Management**.
+3. Upload the archive from the `dist` directory.
+4. Enable **Channel Reply**.
+5. Reload the Mattermost browser tab or desktop client.
 
-### Через mmctl
+### mmctl
 
 ```bash
 mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
 mmctl plugin enable com.github.mattermost-channel-reply
 ```
 
-## Сборка из исходников
+## Building from source
 
-Понадобятся Node.js 18 или новее, npm, GNU Make, а также `cp`, `mkdir`, `rm` и `tar`.
+The standard build requires Node.js 18 or newer, npm, GNU Make, and the `cp`, `mkdir`, `rm`, and `tar` commands.
 
 ```bash
 make dist
 ```
 
-Команда устанавливает версии зависимостей из lock-файла, запускает проверку TypeScript, собирает production-бандл и упаковывает готовый плагин.
+This command installs the dependency versions from the lockfile, runs the TypeScript check, creates the production bundle, and packages the plugin.
 
-Отдельные операции:
-
-```bash
-make webapp  # зависимости, typecheck и webpack-сборка
-make bundle  # упаковка уже собранного webapp/dist
-make clean   # удаление сгенерированных файлов и node_modules
-```
-
-В Windows Makefile следует запускать через WSL или Git Bash. Проверить webapp без Make можно так:
+Individual operations:
 
 ```bash
-cd webapp
-npm ci
-npm run typecheck
-npm run build
+make webapp  # install dependencies, type-check, and build the webpack bundle
+make bundle  # package an existing webapp/dist build
+make clean   # remove generated files and node_modules
 ```
 
-## Устройство репозитория
+On Windows, run the Makefile through WSL or Git Bash. To build and package the plugin without `make`, use PowerShell:
 
-| Путь | Назначение |
+```powershell
+npm --prefix webapp ci
+npm --prefix webapp run typecheck
+npm --prefix webapp run build
+
+$pluginId = 'com.github.mattermost-channel-reply'
+$pluginVersion = '1.2.0'
+$distPath = Join-Path $PWD 'dist'
+$stagePath = Join-Path $distPath $pluginId
+$archivePath = Join-Path $distPath "$pluginId-$pluginVersion.tar.gz"
+
+Remove-Item -LiteralPath $stagePath -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $archivePath -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $stagePath 'webapp/dist') -Force | Out-Null
+Copy-Item -LiteralPath 'plugin.json' -Destination $stagePath
+Copy-Item -LiteralPath 'webapp/dist/main.js' -Destination (Join-Path $stagePath 'webapp/dist')
+Copy-Item -LiteralPath 'webapp/dist/main.js.LICENSE.txt' -Destination (Join-Path $stagePath 'webapp/dist')
+tar -czf $archivePath -C $distPath $pluginId
+```
+
+The completed archive is written to `dist/com.github.mattermost-channel-reply-1.2.0.tar.gz`.
+
+## Repository layout
+
+| Path | Purpose |
 | --- | --- |
-| `plugin.json` | Идентификатор, версия, совместимость и путь к webapp-бандлу |
-| `webapp/src/index.tsx` | Регистрация компонентов и перехват отправки сообщений |
-| `webapp/src/components/` | Кнопка ответа, карточка цитаты и preview редактора |
-| `webapp/src/actions/` | Выбор контекста, открытие треда и переход к оригиналу |
-| `webapp/src/utils/mobileQuote.ts` | Формирование Markdown-представления для мобильных клиентов |
-| `webapp/src/styles/` | Стили компонентов плагина |
-| `Makefile` | Проверка, сборка и создание установочного архива |
+| `plugin.json` | Plugin ID, version, compatibility, and webapp bundle path |
+| `webapp/src/index.tsx` | Component registration and message-posting hook |
+| `webapp/src/components/` | Reply button, quote card, and editor preview |
+| `webapp/src/components/DoubleClickReplyHandler.tsx` | Single/double-click separation and double-click reply handling |
+| `webapp/src/actions/` | Context selection, thread opening, and navigation to the original message |
+| `webapp/src/utils/mobileQuote.ts` | Markdown fallback generation for mobile clients |
+| `webapp/src/styles/` | Plugin component styles |
+| `Makefile` | Validation, build, and installable archive creation |
 
-## Подготовка собственного релиза
+## Preparing your own release
 
-Перед публикацией собственной сборки используйте reverse-DNS идентификатор, которым управляете вы. Текущее значение встречается в нескольких местах и должно меняться согласованно:
+Before publishing your own build, use a reverse-DNS identifier that you control. The current value appears in several places and must be changed consistently:
 
 - `plugin.json`;
 - `webapp/src/manifest.ts`;
-- `PLUGIN_STATE_KEY` в `webapp/src/types/store.ts`;
-- `PLUGIN_ID` в `Makefile`.
+- `PLUGIN_STATE_KEY` in `webapp/src/types/store.ts`;
+- `PLUGIN_ID` in `Makefile`.
 
-Версию необходимо синхронизировать в `plugin.json`, `webapp/src/manifest.ts`, `webapp/package.json` и `Makefile`. После изменения зависимостей или метаданных npm обновите `webapp/package-lock.json`.
+Keep the version synchronized in `plugin.json`, `webapp/src/manifest.ts`, `webapp/package.json`, and `Makefile`. After changing npm dependencies or metadata, update `webapp/package-lock.json`.
 
-Проект не является официальным продуктом Mattermost и не поддерживается компанией Mattermost.
+This project is not an official Mattermost product and is not supported by Mattermost.
 
-## Лицензия
+## License
 
-MIT — полный текст находится в файле [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE) for the full text.
