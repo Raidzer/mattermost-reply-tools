@@ -11,5 +11,5 @@
         "noEmit": true,
         "baseUrl": "src"
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "tests/**/*", "vitest.config.ts"]
 }

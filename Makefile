@@ -8,6 +8,7 @@ all: dist
 
 webapp:
 	cd webapp && npm ci
+	cd webapp && npm test
 	cd webapp && npm run typecheck
 	cd webapp && npm run build
 

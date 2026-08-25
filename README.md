@@ -102,9 +102,12 @@ make clean   # удаление сгенерированных файлов и n
 ```bash
 cd webapp
 npm ci
+npm test
 npm run typecheck
 npm run build
 ```
+
+Для локального отчёта о покрытии используйте `npm run test:coverage` в каталоге `webapp`.
 
 ## Устройство репозитория
 
