@@ -24,12 +24,12 @@ A compact card for the original message appears above the reply text. Clicking i
 
 ## Reply and navigation flows
 
-| Action | Result | What participants see |
-| --- | --- | --- |
-| Channel timeline → **Reply** or double-click the message body | A separate reply in the main channel | The selected message quote and the new text |
-| Right-hand thread panel → **Reply** or double-click the message body | A reply in the current thread | The quote and reply inside the discussion |
-| Channel timeline → single-click the message body | The thread opens in the right-hand panel after a 500 ms delay | Quoted reply mode is not activated |
-| Message menu → **Thread** | A reply in the selected message's thread | A regular thread reply with a quote |
+| Action                                                               | Result                                                        | What participants see                       |
+| -------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------- |
+| Channel timeline → **Reply** or double-click the message body        | A separate reply in the main channel                          | The selected message quote and the new text |
+| Right-hand thread panel → **Reply** or double-click the message body | A reply in the current thread                                 | The quote and reply inside the discussion   |
+| Channel timeline → single-click the message body                     | The thread opens in the right-hand panel after a 500 ms delay | Quoted reply mode is not activated          |
+| Message menu → **Thread**                                            | A reply in the selected message's thread                      | A regular thread reply with a quote         |
 
 After a message is selected, the plugin focuses the appropriate editor and displays a preview. The selection can be cleared with the close button. When the reply is posted, the plugin stores:
 
@@ -41,18 +41,18 @@ The fallback keeps the reply readable in clients that cannot render this plugin'
 
 ## Client support
 
-| Client | Creating quoted replies | Displaying replies |
-| --- | --- | --- |
-| Mattermost Web | Fully supported | Interactive quote card |
-| Mattermost Desktop | Fully supported | Interactive quote card |
-| Native Android and iOS apps | Not supported | Plain Markdown quote |
+| Client                      | Creating quoted replies | Displaying replies     |
+| --------------------------- | ----------------------- | ---------------------- |
+| Mattermost Web              | Fully supported         | Interactive quote card |
+| Mattermost Desktop          | Fully supported         | Interactive quote card |
+| Native Android and iOS apps | Not supported           | Plain Markdown quote   |
 
 Native mobile apps do not load webapp plugins. Messages created in a browser or the desktop client remain readable on mobile, but the **Reply** button and editor preview are not available there.
 
 ## Compatibility and limitations
 
 - the minimum Mattermost Server version declared in the manifest is **9.0.0**;
-- the current plugin version is **1.2.0**;
+- the current plugin version is **1.2.1**;
 - **Threaded discussions → Always On** is recommended for predictable thread behavior;
 - double-click reply is available only in Mattermost Web and Desktop;
 - single-clicking a message body is handled with a 500 ms delay to prevent the thread from opening before a double click;
@@ -69,7 +69,7 @@ The project was tested with Mattermost 11.6.2. Before deploying it to production
 Installation requires a built plugin archive:
 
 ```text
-dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
+dist/com.github.mattermost-channel-reply-1.2.1.tar.gz
 ```
 
 ### System Console
@@ -83,7 +83,7 @@ dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
 ### mmctl
 
 ```bash
-mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
+mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.1.tar.gz
 mmctl plugin enable com.github.mattermost-channel-reply
 ```
 
@@ -113,7 +113,7 @@ npm --prefix webapp run typecheck
 npm --prefix webapp run build
 
 $pluginId = 'com.github.mattermost-channel-reply'
-$pluginVersion = '1.2.0'
+$pluginVersion = '1.2.1'
 $distPath = Join-Path $PWD 'dist'
 $stagePath = Join-Path $distPath $pluginId
 $archivePath = Join-Path $distPath "$pluginId-$pluginVersion.tar.gz"
@@ -127,20 +127,20 @@ Copy-Item -LiteralPath 'webapp/dist/main.js.LICENSE.txt' -Destination (Join-Path
 tar -czf $archivePath -C $distPath $pluginId
 ```
 
-The completed archive is written to `dist/com.github.mattermost-channel-reply-1.2.0.tar.gz`.
+The completed archive is written to `dist/com.github.mattermost-channel-reply-1.2.1.tar.gz`.
 
 ## Repository layout
 
-| Path | Purpose |
-| --- | --- |
-| `plugin.json` | Plugin ID, version, compatibility, and webapp bundle path |
-| `webapp/src/index.tsx` | Component registration and message-posting hook |
-| `webapp/src/components/` | Reply button, quote card, and editor preview |
-| `webapp/src/components/DoubleClickReplyHandler.tsx` | Single/double-click separation and double-click reply handling |
-| `webapp/src/actions/` | Context selection, thread opening, and navigation to the original message |
-| `webapp/src/utils/mobileQuote.ts` | Markdown fallback generation for mobile clients |
-| `webapp/src/styles/` | Plugin component styles |
-| `Makefile` | Validation, build, and installable archive creation |
+| Path                                                | Purpose                                                                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| `plugin.json`                                       | Plugin ID, version, compatibility, and webapp bundle path                 |
+| `webapp/src/index.tsx`                              | Component registration and message-posting hook                           |
+| `webapp/src/components/`                            | Reply button, quote card, and editor preview                              |
+| `webapp/src/components/DoubleClickReplyHandler.tsx` | Single/double-click separation and double-click reply handling            |
+| `webapp/src/actions/`                               | Context selection, thread opening, and navigation to the original message |
+| `webapp/src/utils/mobileQuote.ts`                   | Markdown fallback generation for mobile clients                           |
+| `webapp/src/styles/`                                | Plugin component styles                                                   |
+| `Makefile`                                          | Validation, build, and installable archive creation                       |
 
 ## Preparing your own release
 
