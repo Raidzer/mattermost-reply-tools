@@ -1,5 +1,5 @@
 export default {
     id: 'com.github.mattermost-channel-reply',
     name: 'Channel Reply',
-    version: '1.2.0',
+    version: '1.2.1',
 };

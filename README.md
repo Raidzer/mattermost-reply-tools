@@ -52,7 +52,7 @@ Native mobile apps do not load webapp plugins. Messages created in a browser or 
 ## Compatibility and limitations
 
 - the minimum Mattermost Server version declared in the manifest is **9.0.0**;
-- the current plugin version is **1.2.0**;
+- the current plugin version is **1.2.1**;
 - **Threaded discussions → Always On** is recommended for predictable thread behavior;
 - double-click reply is available only in Mattermost Web and Desktop;
 - single-clicking a message body is handled with a 500 ms delay to prevent the thread from opening before a double click;
@@ -69,7 +69,7 @@ The project was tested with Mattermost 11.6.2. Before deploying it to production
 Installation requires a built plugin archive:
 
 ```text
-dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
+dist/com.github.mattermost-channel-reply-1.2.1.tar.gz
 ```
 
 ### System Console
@@ -83,7 +83,7 @@ dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
 ### mmctl
 
 ```bash
-mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.0.tar.gz
+mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.1.tar.gz
 mmctl plugin enable com.github.mattermost-channel-reply
 ```
 
@@ -113,7 +113,7 @@ npm --prefix webapp run typecheck
 npm --prefix webapp run build
 
 $pluginId = 'com.github.mattermost-channel-reply'
-$pluginVersion = '1.2.0'
+$pluginVersion = '1.2.1'
 $distPath = Join-Path $PWD 'dist'
 $stagePath = Join-Path $distPath $pluginId
 $archivePath = Join-Path $distPath "$pluginId-$pluginVersion.tar.gz"
@@ -127,7 +127,7 @@ Copy-Item -LiteralPath 'webapp/dist/main.js.LICENSE.txt' -Destination (Join-Path
 tar -czf $archivePath -C $distPath $pluginId
 ```
 
-The completed archive is written to `dist/com.github.mattermost-channel-reply-1.2.0.tar.gz`.
+The completed archive is written to `dist/com.github.mattermost-channel-reply-1.2.1.tar.gz`.
 
 ## Repository layout
 

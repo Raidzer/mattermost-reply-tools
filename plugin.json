@@ -4,7 +4,7 @@
     "description": "Adds quoted replies from message actions or double-clicks while preserving single-click thread navigation in Mattermost.",
     "homepage_url": "https://github.com/Raidzer/mattermost-reply-tools",
     "support_url": "https://github.com/Raidzer/mattermost-reply-tools/issues",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "min_server_version": "9.0.0",
     "webapp": {
         "bundle_path": "webapp/dist/main.js"
