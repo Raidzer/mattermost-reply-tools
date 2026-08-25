@@ -15,6 +15,7 @@
         "build": "webpack --mode=production",
         "debug": "webpack --mode=development",
         "hooks:install": "node scripts/install-hooks.mjs",
+        "lockfile:check": "node scripts/validate-lockfile.mjs",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
         "typecheck": "tsc --noEmit"

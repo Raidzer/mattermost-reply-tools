@@ -2,6 +2,8 @@
 
 set -eu
 
+npm --prefix webapp run lockfile:check
+
 if [ ! -d webapp/node_modules ]; then
     echo "webapp dependencies are not installed; run 'cd webapp && npm ci' first." >&2
     exit 1

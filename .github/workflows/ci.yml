@@ -43,6 +43,10 @@ jobs:
           cache: npm
           cache-dependency-path: webapp/package-lock.json
 
+      - name: Validate lockfile
+        working-directory: webapp
+        run: npm run lockfile:check
+
       - name: Install webapp dependencies
         working-directory: webapp
         run: npm ci
