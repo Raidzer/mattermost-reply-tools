@@ -1,66 +1,103 @@
 # Mattermost Reply Tools
 
-This repository contains **Channel Reply**, a webapp-only Mattermost plugin that lets users reply to a specific message in the channel timeline or in a thread without manually copying the original text.
+**Channel Reply** добавляет в Mattermost два явных способа ответить на выбранное сообщение: продолжить разговор прямо в ленте канала с видимой цитатой или отправить обычный ответ внутрь треда.
 
-The plugin package is named `Channel Reply`, uses the ID `com.github.mattermost-channel-reply`, and is currently version `1.1.3`.
+Это небольшое community-расширение без серверного процесса и страницы настроек. Вся логика интерфейса выполняется в webapp-клиенте Mattermost.
 
-> **Community project:** this plugin is not developed or supported by Mattermost. It was created with the help of AI-assisted coding tools and is provided as-is. Review the source and test the plugin in your own environment before using it in production.
+## Как это выглядит
 
-## What it adds
+### Выбор сообщения
 
-- **Reply in channel** — starts a reply in the main channel composer. The result is a separate channel post with a quoted reference instead of a thread reply.
-- **Reply in thread** — starts a reply in the thread sidebar. The result remains part of that thread.
-- **Clickable quotes** — opens and highlights the original message through its Mattermost permalink.
-- **Composer preview** — shows the selected author and up to five lines of quoted text before the reply is sent.
-- **Mobile-readable fallback** — stores the quote as Markdown so native mobile clients can display it even though the plugin UI is unavailable there.
+Кнопка **Reply** появляется в панели действий сообщения и подготавливает основной редактор канала.
 
-## Screenshots
+![Кнопка Reply в панели сообщения](images/reply-button.png)
 
-Reply action in the message toolbar:
+### Отправленный ответ
 
-![Reply action in Mattermost](images/reply-button.png)
+Перед текстом ответа отображается компактная карточка исходного сообщения. Нажатие на неё открывает оригинал по постоянной ссылке.
 
-Quoted reply inside a thread:
+![Ответ с интерактивной цитатой](images/quoted-reply-thread.png)
 
-![Quoted reply in a Mattermost thread](images/quoted-reply-thread.png)
+## Два сценария ответа
 
-## Compatibility
+| Откуда запускается действие | Куда попадёт ответ | Что увидят участники |
+| --- | --- | --- |
+| Лента канала → **Reply** | В основной канал, отдельным сообщением | Цитату выбранного сообщения и новый текст |
+| Правая панель треда → **Reply** | В текущий тред | Цитату и ответ внутри обсуждения |
+| Меню сообщения → **Thread** | В тред выбранного сообщения | Обычное продолжение обсуждения с цитатой |
 
-- Mattermost Server **9.0 or later**; tested with Mattermost **10.5.x**
-- Mattermost web and desktop clients for creating and interacting with quoted replies
-- Mattermost native mobile clients can read the Markdown fallback, but cannot create quoted replies
-- [Threaded discussions](https://docs.mattermost.com/administration-guide/configure/site-configuration-settings.html#threaded-discussions) (formerly Collapsed Reply Threads) enabled for the intended thread experience
+После выбора сообщения плагин переводит фокус в нужный редактор и показывает предварительный просмотр. Выбор можно отменить крестиком. При отправке плагин сохраняет:
 
-The plugin has no server component and no configurable settings.
+- идентификатор исходного сообщения в свойствах нового поста;
+- отдельное тело ответа для собственного web-интерфейса;
+- Markdown-цитату в поле сообщения как переносимый запасной формат.
 
-## Build from source
+Последний пункт позволяет прочитать результат даже в клиенте, который не умеет отображать компоненты этого плагина.
 
-Prerequisites:
+## Поддержка клиентов
 
-- Node.js **18 or later** and npm
-- GNU Make and the standard Unix tools `cp`, `rm`, `mkdir`, and `tar`
-- On Windows, use WSL or Git Bash to run the Makefile
+| Клиент | Создание ответа с цитатой | Отображение результата |
+| --- | --- | --- |
+| Mattermost Web | Полностью поддерживается | Интерактивная карточка цитаты |
+| Mattermost Desktop | Полностью поддерживается | Интерактивная карточка цитаты |
+| Нативные приложения Android и iOS | Не поддерживается | Обычная Markdown-цитата |
 
-Build and package the plugin from the repository root:
+Нативное мобильное приложение не загружает webapp-плагины. Сообщения, созданные через браузер или desktop-клиент, на телефоне остаются читаемыми, но кнопка **Reply** и предварительный просмотр там не появятся.
 
-```bash
-make dist
-```
+## Совместимость и ограничения
 
-The command installs the exact dependencies from `webapp/package-lock.json`, checks the TypeScript source, builds `webapp/dist/main.js`, and creates:
+- минимальная версия Mattermost Server, указанная в манифесте: **9.0.0**;
+- текущая версия плагина: **1.1.3**;
+- для предсказуемой работы тредов рекомендуется режим **Threaded discussions → Always On**;
+- удалённые и системные сообщения не предлагаются в качестве цели ответа;
+- длинный исходный текст сокращается в карточке и Markdown-представлении;
+- плагин не запускает собственный backend и не добавляет API-методы;
+- конфигурационных параметров у плагина нет.
+
+Проект тестировался с Mattermost 10.5.x. Перед установкой в рабочую среду проверьте сборку на той версии сервера и клиента, которую использует ваша команда.
+
+## Установка
+
+Для установки нужен собранный архив:
 
 ```text
 dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
 ```
 
-Useful targets:
+### Через System Console
+
+1. Разрешите использование и загрузку пользовательских плагинов в конфигурации сервера.
+2. Откройте **System Console → Plugins → Plugin Management**.
+3. Загрузите архив из каталога `dist`.
+4. Включите **Channel Reply**.
+5. Перезагрузите вкладку Mattermost или desktop-клиент.
+
+### Через mmctl
 
 ```bash
-make webapp  # install, type-check, and build the webapp bundle
-make clean   # remove generated bundles and installed dependencies
+mmctl plugin add dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
+mmctl plugin enable com.github.mattermost-channel-reply
 ```
 
-To run the webapp checks directly:
+## Сборка из исходников
+
+Понадобятся Node.js 18 или новее, npm, GNU Make, а также `cp`, `mkdir`, `rm` и `tar`.
+
+```bash
+make dist
+```
+
+Команда устанавливает версии зависимостей из lock-файла, запускает проверку TypeScript, собирает production-бандл и упаковывает готовый плагин.
+
+Отдельные операции:
+
+```bash
+make webapp  # зависимости, typecheck и webpack-сборка
+make bundle  # упаковка уже собранного webapp/dist
+make clean   # удаление сгенерированных файлов и node_modules
+```
+
+В Windows Makefile следует запускать через WSL или Git Bash. Проверить webapp без Make можно так:
 
 ```bash
 cd webapp
@@ -69,49 +106,31 @@ npm run typecheck
 npm run build
 ```
 
-## Install
+## Устройство репозитория
 
-### System Console
+| Путь | Назначение |
+| --- | --- |
+| `plugin.json` | Идентификатор, версия, совместимость и путь к webapp-бандлу |
+| `webapp/src/index.tsx` | Регистрация компонентов и перехват отправки сообщений |
+| `webapp/src/components/` | Кнопка ответа, карточка цитаты и preview редактора |
+| `webapp/src/actions/` | Выбор контекста, открытие треда и переход к оригиналу |
+| `webapp/src/utils/mobileQuote.ts` | Формирование Markdown-представления для мобильных клиентов |
+| `webapp/src/styles/` | Стили компонентов плагина |
+| `Makefile` | Проверка, сборка и создание установочного архива |
 
-1. Make sure plugins and plugin uploads are enabled for the deployment.
-2. Open **System Console → Plugins → Management**.
-3. Upload `dist/com.github.mattermost-channel-reply-1.1.3.tar.gz`.
-4. Enable **Channel Reply**.
-5. Reload the Mattermost web or desktop client.
+## Подготовка собственного релиза
 
-### mmctl
+Перед публикацией собственной сборки используйте reverse-DNS идентификатор, которым управляете вы. Текущее значение встречается в нескольких местах и должно меняться согласованно:
 
-```bash
-mmctl plugin upload dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
-mmctl plugin enable com.github.mattermost-channel-reply
-```
+- `plugin.json`;
+- `webapp/src/manifest.ts`;
+- `PLUGIN_STATE_KEY` в `webapp/src/types/store.ts`;
+- `PLUGIN_ID` в `Makefile`.
 
-For the intended thread behavior, open **System Console → Site Configuration → Posts**, set **Threaded discussions** to **Always On**, and enable **Automatically follow threads**.
+Версию необходимо синхронизировать в `plugin.json`, `webapp/src/manifest.ts`, `webapp/package.json` и `Makefile`. После изменения зависимостей или метаданных npm обновите `webapp/package-lock.json`.
 
-## Project layout
+Проект не является официальным продуктом Mattermost и не поддерживается компанией Mattermost.
 
-```text
-├── images/                 # README screenshots
-├── webapp/
-│   ├── src/                # React and TypeScript source
-│   ├── package.json        # webapp scripts and dependencies
-│   └── package-lock.json   # reproducible dependency lock
-├── Makefile                # build and packaging targets
-├── plugin.json             # Mattermost plugin manifest
-└── LICENSE
-```
+## Лицензия
 
-## Forking and releasing
-
-If you publish a fork, replace the plugin ID with a reverse-DNS ID you control in:
-
-- `plugin.json`
-- `webapp/src/manifest.ts`
-- `webapp/src/types/store.ts` (`PLUGIN_STATE_KEY`)
-- `Makefile`
-
-Keep the version synchronized in `plugin.json`, `webapp/src/manifest.ts`, `webapp/package.json`, and `Makefile`. After changing `webapp/package.json`, update `webapp/package-lock.json` with npm.
-
-## License
-
-Released under the [MIT License](LICENSE). Copyright © 2026 Виталий Кутузов.
+MIT — полный текст находится в файле [LICENSE](LICENSE).
