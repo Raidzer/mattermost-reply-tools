@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Validate release version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(node -p "require('./plugin.json').version")"
+          package_version="$(node -p "require('./webapp/package.json').version")"
+          lock_version="$(node -p "require('./webapp/package-lock.json').version")"
+          manifest_version="$(sed -n "s/.*version: '\([^']*\)'.*/\1/p" webapp/src/manifest.ts)"
+          make_version="$(sed -n 's/^PLUGIN_VERSION := //p' Makefile)"
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::plugin.json version must use X.Y.Z format, got '$version'."
+            exit 1
+          fi
+
+          for declared_version in \
+            "$package_version" \
+            "$lock_version" \
+            "$manifest_version" \
+            "$make_version"; do
+            if [[ "$declared_version" != "$version" ]]; then
+              echo "::error::Release versions are not synchronized. Expected '$version', got '$declared_version'."
+              exit 1
+            fi
+          done
+
+          tag="v${version}"
+          asset="dist/com.github.mattermost-channel-reply-${version}.tar.gz"
+          tag_exists=false
+          release_exists=false
+
+          if git rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+            tag_commit="$(git rev-list -n 1 "$tag")"
+            if [[ "$tag_commit" != "$GITHUB_SHA" ]]; then
+              echo "::error::Tag '$tag' already belongs to commit '$tag_commit'. Bump the project version before merging into main."
+              exit 1
+            fi
+            tag_exists=true
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            release_exists=true
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
+          echo "release_exists=$release_exists" >> "$GITHUB_OUTPUT"
+
+      - name: Build plugin bundle
+        if: steps.release.outputs.release_exists != 'true'
+        run: make dist
+
+      - name: Verify plugin bundle
+        if: steps.release.outputs.release_exists != 'true'
+        env:
+          RELEASE_ASSET: ${{ steps.release.outputs.asset }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$RELEASE_ASSET"
+          tar -tzf "$RELEASE_ASSET" | grep -Fx 'com.github.mattermost-channel-reply/plugin.json' >/dev/null
+          tar -tzf "$RELEASE_ASSET" | grep -Fx 'com.github.mattermost-channel-reply/webapp/dist/main.js' >/dev/null
+
+      - name: Create release tag
+        if: steps.release.outputs.tag_exists != 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag --annotate "$RELEASE_TAG" "$GITHUB_SHA" --message "Release $RELEASE_TAG"
+          git push origin "$RELEASE_TAG"
+
+      - name: Publish GitHub release
+        if: steps.release.outputs.release_exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ASSET: ${{ steps.release.outputs.asset }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" "$RELEASE_ASSET" \
+            --verify-tag \
+            --generate-notes \
+            --title "$RELEASE_TAG"

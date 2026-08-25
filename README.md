@@ -1,117 +1,160 @@
 # Mattermost Reply Tools
 
-This repository contains **Channel Reply**, a webapp-only Mattermost plugin that lets users reply to a specific message in the channel timeline or in a thread without manually copying the original text.
+**Channel Reply** gives Mattermost users two explicit ways to reply to a selected message: continue the conversation directly in the channel with a visible quote, or send a regular reply inside a thread.
 
-The plugin package is named `Channel Reply`, uses the ID `com.github.mattermost-channel-reply`, and is currently version `1.1.3`.
+This is a small community plugin with no server process or settings page. All interface logic runs in the Mattermost webapp client.
 
-> **Community project:** this plugin is not developed or supported by Mattermost. It was created with the help of AI-assisted coding tools and is provided as-is. Review the source and test the plugin in your own environment before using it in production.
+## What it looks like
 
-## What it adds
+### Selecting a message
 
-- **Reply in channel** — starts a reply in the main channel composer. The result is a separate channel post with a quoted reference instead of a thread reply.
-- **Reply in thread** — starts a reply in the thread sidebar. The result remains part of that thread.
-- **Clickable quotes** — opens and highlights the original message through its Mattermost permalink.
-- **Composer preview** — shows the selected author and up to five lines of quoted text before the reply is sent.
-- **Mobile-readable fallback** — stores the quote as Markdown so native mobile clients can display it even though the plugin UI is unavailable there.
+The **Reply** button appears in the message action bar and prepares the appropriate editor for a quoted reply. The same action can be started by double-clicking a non-interactive area of the message body: in the channel timeline, the reply is posted to the main channel; in the right-hand thread panel, it is posted to the open thread.
 
-## Screenshots
+To distinguish a single click from a double click, the plugin delays single-click handling by 500 ms. If no second click arrives, the event is passed to Mattermost and the regular thread opens from the channel timeline. On a double click, the pending single click is canceled, so the right-hand panel does not open before **Reply** mode starts.
 
-Reply action in the message toolbar:
+Double clicks are not intercepted on interactive elements such as links, buttons, input fields, code blocks, images, attachments, and embedded content. These elements continue to work without delay.
 
-![Reply action in Mattermost](images/reply-button.png)
+![Reply button in the message action bar](images/reply-button.png)
 
-Quoted reply inside a thread:
+### Posted reply
 
-![Quoted reply in a Mattermost thread](images/quoted-reply-thread.png)
+A compact card for the original message appears above the reply text. Clicking it opens the original message through its permanent link.
 
-## Compatibility
+![Reply with an interactive quote](images/quoted-reply-thread.png)
 
-- Mattermost Server **9.0 or later**; tested with Mattermost **10.5.x**
-- Mattermost web and desktop clients for creating and interacting with quoted replies
-- Mattermost native mobile clients can read the Markdown fallback, but cannot create quoted replies
-- [Threaded discussions](https://docs.mattermost.com/administration-guide/configure/site-configuration-settings.html#threaded-discussions) (formerly Collapsed Reply Threads) enabled for the intended thread experience
+## Reply and navigation flows
 
-The plugin has no server component and no configurable settings.
+| Action                                                               | Result                                                        | What participants see                       |
+| -------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------- |
+| Channel timeline → **Reply** or double-click the message body        | A separate reply in the main channel                          | The selected message quote and the new text |
+| Right-hand thread panel → **Reply** or double-click the message body | A reply in the current thread                                 | The quote and reply inside the discussion   |
+| Channel timeline → single-click the message body                     | The thread opens in the right-hand panel after a 500 ms delay | Quoted reply mode is not activated          |
+| Message menu → **Thread**                                            | A reply in the selected message's thread                      | A regular thread reply with a quote         |
 
-## Build from source
+After a message is selected, the plugin focuses the appropriate editor and displays a preview. The selection can be cleared with the close button. When the reply is posted, the plugin stores:
 
-Prerequisites:
+- the original message ID in the new post's properties;
+- a separate reply body for the plugin's web interface;
+- a Markdown quote in the message field as a portable fallback.
 
-- Node.js **18 or later** and npm
-- GNU Make and the standard Unix tools `cp`, `rm`, `mkdir`, and `tar`
-- On Windows, use WSL or Git Bash to run the Makefile
+The fallback keeps the reply readable in clients that cannot render this plugin's components.
 
-Build and package the plugin from the repository root:
+## Client support
+
+| Client                      | Creating quoted replies | Displaying replies     |
+| --------------------------- | ----------------------- | ---------------------- |
+| Mattermost Web              | Fully supported         | Interactive quote card |
+| Mattermost Desktop          | Fully supported         | Interactive quote card |
+| Native Android and iOS apps | Not supported           | Plain Markdown quote   |
+
+Native mobile apps do not load webapp plugins. Messages created in a browser or the desktop client remain readable on mobile, but the **Reply** button and editor preview are not available there.
+
+## Compatibility and limitations
+
+- the minimum Mattermost Server version declared in the manifest is **9.0.0**;
+- the current plugin version is **1.2.1**;
+- **Threaded discussions → Always On** is recommended for predictable thread behavior;
+- double-click reply is available only in Mattermost Web and Desktop;
+- single-clicking a message body is handled with a 500 ms delay to prevent the thread from opening before a double click;
+- links, buttons, code blocks, images, attachments, and other interactive elements are not double-click reply targets;
+- deleted and system messages cannot be selected as reply targets;
+- long source messages are shortened in the quote card and Markdown representation;
+- the plugin has no backend process and adds no API endpoints;
+- the plugin has no configuration options.
+
+The project was tested with Mattermost 11.6.2. Before deploying it to production, verify the build against the server and client versions used by your team.
+
+## Installation
+
+Installation requires a built plugin archive:
+
+```text
+dist/com.github.mattermost-channel-reply-1.2.1.tar.gz
+```
+
+### System Console
+
+1. Allow custom plugins and plugin uploads in the server configuration.
+2. Open **System Console → Plugins → Plugin Management**.
+3. Upload the archive from the `dist` directory.
+4. Enable **Channel Reply**.
+5. Reload the Mattermost browser tab or desktop client.
+
+### mmctl
+
+```bash
+mmctl plugin add dist/com.github.mattermost-channel-reply-1.2.1.tar.gz
+mmctl plugin enable com.github.mattermost-channel-reply
+```
+
+## Building from source
+
+The standard build requires Node.js 18 or newer, npm, GNU Make, and the `cp`, `mkdir`, `rm`, and `tar` commands.
 
 ```bash
 make dist
 ```
 
-The command installs the exact dependencies from `webapp/package-lock.json`, checks the TypeScript source, builds `webapp/dist/main.js`, and creates:
+This command installs the dependency versions from the lockfile, runs the TypeScript check, creates the production bundle, and packages the plugin.
 
-```text
-dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
-```
-
-Useful targets:
+Individual operations:
 
 ```bash
-make webapp  # install, type-check, and build the webapp bundle
-make clean   # remove generated bundles and installed dependencies
+make webapp  # install dependencies, type-check, and build the webpack bundle
+make bundle  # package an existing webapp/dist build
+make clean   # remove generated files and node_modules
 ```
 
-To run the webapp checks directly:
+On Windows, run the Makefile through WSL or Git Bash. To build and package the plugin without `make`, use PowerShell:
 
-```bash
-cd webapp
-npm ci
-npm run typecheck
-npm run build
+```powershell
+npm --prefix webapp ci
+npm --prefix webapp run typecheck
+npm --prefix webapp run build
+
+$pluginId = 'com.github.mattermost-channel-reply'
+$pluginVersion = '1.2.1'
+$distPath = Join-Path $PWD 'dist'
+$stagePath = Join-Path $distPath $pluginId
+$archivePath = Join-Path $distPath "$pluginId-$pluginVersion.tar.gz"
+
+Remove-Item -LiteralPath $stagePath -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $archivePath -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $stagePath 'webapp/dist') -Force | Out-Null
+Copy-Item -LiteralPath 'plugin.json' -Destination $stagePath
+Copy-Item -LiteralPath 'webapp/dist/main.js' -Destination (Join-Path $stagePath 'webapp/dist')
+Copy-Item -LiteralPath 'webapp/dist/main.js.LICENSE.txt' -Destination (Join-Path $stagePath 'webapp/dist')
+tar -czf $archivePath -C $distPath $pluginId
 ```
 
-## Install
+The completed archive is written to `dist/com.github.mattermost-channel-reply-1.2.1.tar.gz`.
 
-### System Console
+## Repository layout
 
-1. Make sure plugins and plugin uploads are enabled for the deployment.
-2. Open **System Console → Plugins → Management**.
-3. Upload `dist/com.github.mattermost-channel-reply-1.1.3.tar.gz`.
-4. Enable **Channel Reply**.
-5. Reload the Mattermost web or desktop client.
+| Path                                                | Purpose                                                                   |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| `plugin.json`                                       | Plugin ID, version, compatibility, and webapp bundle path                 |
+| `webapp/src/index.tsx`                              | Component registration and message-posting hook                           |
+| `webapp/src/components/`                            | Reply button, quote card, and editor preview                              |
+| `webapp/src/components/DoubleClickReplyHandler.tsx` | Single/double-click separation and double-click reply handling            |
+| `webapp/src/actions/`                               | Context selection, thread opening, and navigation to the original message |
+| `webapp/src/utils/mobileQuote.ts`                   | Markdown fallback generation for mobile clients                           |
+| `webapp/src/styles/`                                | Plugin component styles                                                   |
+| `Makefile`                                          | Validation, build, and installable archive creation                       |
 
-### mmctl
+## Preparing your own release
 
-```bash
-mmctl plugin upload dist/com.github.mattermost-channel-reply-1.1.3.tar.gz
-mmctl plugin enable com.github.mattermost-channel-reply
-```
+Before publishing your own build, use a reverse-DNS identifier that you control. The current value appears in several places and must be changed consistently:
 
-For the intended thread behavior, open **System Console → Site Configuration → Posts**, set **Threaded discussions** to **Always On**, and enable **Automatically follow threads**.
+- `plugin.json`;
+- `webapp/src/manifest.ts`;
+- `PLUGIN_STATE_KEY` in `webapp/src/types/store.ts`;
+- `PLUGIN_ID` in `Makefile`.
 
-## Project layout
+Keep the version synchronized in `plugin.json`, `webapp/src/manifest.ts`, `webapp/package.json`, and `Makefile`. After changing npm dependencies or metadata, update `webapp/package-lock.json`.
 
-```text
-├── images/                 # README screenshots
-├── webapp/
-│   ├── src/                # React and TypeScript source
-│   ├── package.json        # webapp scripts and dependencies
-│   └── package-lock.json   # reproducible dependency lock
-├── Makefile                # build and packaging targets
-├── plugin.json             # Mattermost plugin manifest
-└── LICENSE
-```
-
-## Forking and releasing
-
-If you publish a fork, replace the plugin ID with a reverse-DNS ID you control in:
-
-- `plugin.json`
-- `webapp/src/manifest.ts`
-- `webapp/src/types/store.ts` (`PLUGIN_STATE_KEY`)
-- `Makefile`
-
-Keep the version synchronized in `plugin.json`, `webapp/src/manifest.ts`, `webapp/package.json`, and `Makefile`. After changing `webapp/package.json`, update `webapp/package-lock.json` with npm.
+This project is not an official Mattermost product and is not supported by Mattermost.
 
 ## License
 
-Released under the [MIT License](LICENSE). Copyright © 2026 Виталий Кутузов.
+MIT — see [LICENSE](LICENSE) for the full text.
